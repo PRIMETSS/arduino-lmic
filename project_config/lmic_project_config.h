@@ -8,3 +8,7 @@
 //#define CFG_in866 1
 #define CFG_sx1276_radio 1
 //#define LMIC_USE_INTERRUPTS
+#define LMIC_DEBUG_LEVEL 2
+//#define LMIC_LORAWAN_SPEC_VERSION    LMIC_LORAWAN_SPEC_VERSION_1_0_3
+
+

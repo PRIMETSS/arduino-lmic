@@ -1,0 +1,37 @@
+
+Links
+
+	SAMD21 Pro RF
+
+	https://learn.sparkfun.com/tutorials/sparkfun-samd21-pro-rf-hookup-guide/all#programming-the-samd21-pro-rf
+	https://www.sparkfun.com/products/15836
+	http://www.shumatech.com/web/products/bossa
+	https://github.com/sparkfun/SAMD21_Pro_RF/tree/v11
+	Pinouts & LEDs
+	https://learn.sparkfun.com/tutorials/sparkfun-samd21-pro-rf-hookup-guide/hardware-overview
+
+	If device shows as "unknown" in device manger, might be in bootloader mode (ultra fast flashing status LED), double hit RST button fast to toggle modes back to COMx
+
+	LoraWAN (Single Chn ONLY!) LG02 Gateway
+	
+	https://www.dragino.com/products/lora-lorawan-gateway/item/135-lg02.html
+	https://github.com/dragino/
+
+	LMIC
+
+	Radio PARMS
+	https://github.com/mcci-catena/arduino-lmic/blob/master/doc/RadioDriver.md#lmicfreq-in
+
+
+*** Remember if you add a Arudino Libary it is pulled from \Document\Arduini\Librarys !!!!
+
+Suspect LG02 locks up if viewing System Logs! Which stops Packet TX to reboot! (no something else is happening when packets received by TNN gateway, but not forward to Application)
+https://www.thethingsnetwork.org/forum/t/ttn-no-data-forwarding-from-gateway-to-app/51946
+"Did you persist the F_Count data either side of the reset? If not, if you dont disable f-count checks, the back end will see the count start again from zero and will assume a replay attack until the device has reached a count where it is larger than the last seen value - try disabling F_Count checks (not recommended long term for deployment - unless using ABP) to see if solves problem - then look at how to improve handling for deployment. Note: A successful OTAA join will reset count at both sides consecutively avoiding this problem, and is inherently more secure that ABP."
+
+"Documentation for future reader:
+I changed the Fcnt Reset Frame Counter at:
+MyApp → End devices → my-abp-device → General Settings → Network layer → Reset Frame Counters (checked) !!!
+Note: do not use in production"
+
+	
