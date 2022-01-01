@@ -71,9 +71,8 @@ static osjob_t sendjob;
 // Schedule TX every this many seconds (might become longer due to duty cycle limitations)
 const unsigned TX_INTERVAL = 5; //30
 
-// Pin mapping for Adafruit Feather M0 LoRa
-// /!\ By default Adafruit Feather M0's pin 6 and DIO1 are not connected.
-// Please ensure they are connected.
+// Pin mapping for SparkFun RAMD21 RF Pro Lora
+// Please ensure Lora jumpers set
 const lmic_pinmap lmic_pins = { // Pinouts for SAMD21 Pro RF
     .nss = 12,
     .rxtx = LMIC_UNUSED_PIN,
@@ -138,7 +137,7 @@ void setup() {
     LMIC.dn2Dr = DR_SF9; // DR_SF7? [doesn't work, why?]? Was DR_DF9 on working example
 
     // Set data rate and transmit power for uplink
-    LMIC_setDrTxpow(DR_SF7,14); // Is this MAX? DR_SF9? [doesn't work]
+    LMIC_setDrTxpow(DR_SF7,23); //14); // Is this MAX? DR_SF9? [doesn't work] 
 
     // Start job
     do_send(&sendjob);

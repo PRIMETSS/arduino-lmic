@@ -10,5 +10,6 @@
 //#define LMIC_USE_INTERRUPTS
 #define LMIC_DEBUG_LEVEL 2
 //#define LMIC_LORAWAN_SPEC_VERSION    LMIC_LORAWAN_SPEC_VERSION_1_0_3
+#define DISABLE_INVERT_IQ_ON_RX 1 /* set to disable RX bit inversion (so gateways/notes done see each other) Set for RAW example too*/
 
 
