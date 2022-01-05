@@ -25,6 +25,11 @@
 
 #define LMIC_PRINTF_TO SeerialUSB // not sure!
 
+// **** Need to have LoraWAN jumpers shorted on board, Will then fire EV_TXSTART & EV_TXCOMPLETE events
+// LMIC LIBRARY INFO PDF https://github.com/mcci-catena/arduino-lmic/tree/master/doc
+// https://github.com/mcci-catena/arduino-lmic/blob/master/doc/RadioDriver.md#lmicfreq-in
+// Packet decoder https://lorawan-packet-decoder-0ta6puiniaut.runkit.sh/   e.g. from gw log data: "QMWhDSaAAAABeNbj1h9t50A=" = 574F573F (decrypted) 'WOW!'
+
 // Heartbeat timer
 unsigned long millsCounter = 0;
 
@@ -84,8 +89,8 @@ const lmic_pinmap lmic_pins = { // Pinouts for SAMD21 Pro RF
 };
 
 void setup() {
-    delay(2500);
-    //while (!Serial); // Wait for Terminal connection before start
+    //delay(2500);
+    while (!Serial); // Wait for Terminal connection before start
     SerialUSB.begin(115200);
     delay(100);
     SerialUSB.println(F("Starting"));
@@ -121,20 +126,20 @@ void setup() {
     }
 
  // Force
-//    LMIC_setupChannel(16, 905500000, DR_RANGE_MAP(DR_SF7, DR_SF7), 1);      // [s1_t band] BAND_CENTI =1 is enum in limn_eu_like.h 
+    LMIC_setupChannel(16, 905500000, DR_RANGE_MAP(DR_SF7, DR_SF7), 1);      // [s1_t band] BAND_CENTI =1 is enum in limn_eu_like.h 
 
 
     // We'll only enable Channel 16 (905.5Mhz) since we're transmitting on a single-channel
-    // Setup LG02 Lora setting for both RX/TX radios (dual radio device one for RX one for TX) Freq as 905500000 MHz [US902-928 Ch16?], 125 kHz BW, Spread SF7, Coding Rate 4/5
-    LMIC_enableChannel(16);
+    // Setup LG02 Lora setting for both RX/TX radios (dual radio device two for RX one for TX) Freq as 905500000 MHz [US902-928 Ch16?], 125 kHz BW, Spread SF7, Coding Rate 4/5
+    LMIC_enableChannel(16); // was 16
 
     // Disable link check validation (automatically enabled
     // during join, but because slow data rates change max TX
     // size, we don't use it in this example.
-    LMIC_setLinkCheckMode(0); // Was 0
+    LMIC_setLinkCheckMode(1); // Was 0
 
     // TTN uses SF9 for its RX2 window.
-    LMIC.dn2Dr = DR_SF9; // DR_SF7? [doesn't work, why?]? Was DR_DF9 on working example
+    LMIC.dn2Dr = DR_SF7; //? [doesn't work, why?]? Was DR_DF9 on working example
 
     // Set data rate and transmit power for uplink
     LMIC_setDrTxpow(DR_SF7,23); //14); // Is this MAX? DR_SF9? [doesn't work] 
@@ -149,18 +154,17 @@ void loop() {
   
   if ((millsCounter % 1000) == 0) {
     digitalWrite(LED_BUILTIN, HIGH); // on [Blue]
-      SerialUSB.print("Frequency======: "); SerialUSB.print(LMIC.freq); SerialUSB.print(" MHz");
-      /* 1000000);
-      SerialUSB.print("  .  "); SerialUSB.print(LMIC.freq); // / 100000));// % 10);
-      SerialUSB.print("MHz");*/
-      SerialUSB.print("  LMIC.datarate: "); SerialUSB.print(LMIC.datarate);
-      SerialUSB.print("  LMIC.txpow: "); SerialUSB.print(LMIC.txpow); SerialUSB.print("  LMIC.rssi: "); SerialUSB.println(LMIC.rssi);    
+    SerialUSB.print("Frequency======: "); SerialUSB.print(LMIC.freq); SerialUSB.print(" MHz"); // Chn16 setup for 90550000 but LMIC.freq displays 92390000 ?? Make sure Freq Bans set #define CFG_au915 1 in project config
+    /* 1000000);
+    SerialUSB.print("  .  "); SerialUSB.print(LMIC.freq); // / 100000));// % 10);
+    SerialUSB.print("MHz");*/
+    SerialUSB.print("  LMIC.datarate: "); SerialUSB.print(LMIC.datarate);
+    SerialUSB.print("  LMIC.txpow: "); SerialUSB.print(LMIC.txpow); SerialUSB.print("  LMIC.rssi: "); SerialUSB.println(LMIC.rssi);    
           
   } else if ((millsCounter % 500) == 0)
     digitalWrite(LED_BUILTIN, LOW); // off [Blue]
-  
-  
-  os_runloop_once(); // LMIC OS Loop
+   
+  os_runloop_once(); // LMIC OS Loop  
 }
 
 
@@ -221,7 +225,7 @@ void onEvent (ev_t ev) {
             break;
         case EV_RXCOMPLETE:
             // data received in ping slot
-            SerialUSB.println(F("EV_RXCOMPLETE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
+            SerialUSB.println(F("EV_RXCOMPLETE"));
             if (LMIC.dataLen) {
               SerialUSB.print(F("Received: "));
               SerialUSB.print(LMIC.dataLen);
@@ -268,20 +272,20 @@ void do_send(osjob_t* j){
     if (LMIC.opmode & OP_TXRXPEND) {
         SerialUSB.println(F("OP_TXRXPEND, not sending"));
     } else {
-        // Dummy payload just for testing
-        payload[0] = 0x00;
-        payload[1] = 0xFF;
-        payload[2] = 0x11;
-        payload[3] = 0x22;
-
+        // Dummy payload just for testing (Encrypted with Key?) https://github.com/matthijskooijman/arduino-lmic/issues/99 ?
+        payload[0] = 'W';
+        payload[1] = 'O';
+        payload[2] = 'W';
+        payload[3] = '!';
+        payload[3] = '?';
+        
         // prepare upstream data transmission at the next possible time.
         // transmit on port 1 (the first parameter); you can use any value from 1 to 223 (others are reserved).
         // don't request an ack (the last parameter, if not zero, requests an ack from the network).
         // Remember, acks consume a lot of network resources; don't ask for an ack unless you really need it.
         LMIC_setTxData2(1, payload, sizeof(payload)-1, 0); // ...,1); = ACK Confirmation (only 10 per day!? https://www.thethingsnetwork.org/forum/t/read-meta-information-from-ack-packet-arduino-lmic/35935/4)
 
-        SerialUSB.println(F("LMIC_setTxData2() Sending, Packet Queued"));
-        //SerialUSB.println(&j);
+        SerialUSB.println(F("LMIC_setTxData2() Sending, Packet Queued"));        
     }
     // Next TX is scheduled after TX_COMPLETE event.
 }
